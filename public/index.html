@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Senior Farewell Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+<div class="bg-hearts"></div>
+<div class="confetti-container" id="confettiContainer"></div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<div class="container">
+  <div class="header">
+    <div class="round-badge" id="roundBadge" style="display:none;">Round 1 of 4</div>
+  </div>
+
+  <!-- ADMIN TABS (Only visible to admin) -->
+  <div class="tabs" id="adminTabs" style="display:none;">
+    <button class="tab active" onclick="switchTab('setup')" id="tab-setup">⚙️ Setup</button>
+    <button class="tab" onclick="switchTab('leaderboard')" id="tab-leaderboard">👑 Leaderboard</button>
+  </div>
+
+  <div class="info-tag admin-room-display" id="adminRoomInfo" style="display:none;">
+      Room Code: <strong id="displayRoomCode">---</strong>
+      <span id="playerCountLabel">0 Players Joined</span>
+  </div>
+
+  <!-- LANDING PAGE -->
+  <div class="screen active" id="screen-landing">
+    <div class="landing-card">
+        <h2>Welcome to the Game!</h2>
+        <div class="join-section">
+            <input type="text" id="playerName" placeholder="Your Name" class="nice-input">
+            <input type="text" id="roomCode" placeholder="Room Code (e.g. ABCD)" class="nice-input code-input">
+            <button class="btn btn-primary" onclick="joinRoom()">Join Game</button>
+        </div>
+        <div class="divider"><span>OR</span></div>
+        <div class="create-section">
+            <button class="btn btn-outline" onclick="createRoom()">Create Room (Admin)</button>
+        </div>
+    </div>
+  </div>
+
+  <!-- SETUP SCREEN (Admin) -->
+  <div class="screen" id="screen-setup">
+    <div class="section-title">🌸 Your Seniors</div>
+    <div class="setup-grid" id="seniorGrid"></div>
+    <div class="setup-actions">
+      <button class="btn btn-primary" onclick="startGame()">🎮 Start Game For Everyone</button>
+      <span class="info-tag">💡 Click avatar to upload photo · Edit name & pickup line</span>
+    </div>
+  </div>
+
+  <!-- WAITING SCREEN (Players) -->
+  <div class="screen" id="screen-waiting">
+    <div class="landing-card">
+        <h2>Waiting for Admin...</h2>
+        <p style="color:var(--text-med)">The game will start shortly! Get ready to vote.</p>
+        <br>
+        <div class="loader"></div>
+    </div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div class="screen" id="screen-game">
+    <div class="game-header">
+      <div>
+        <div class="round-info" id="matchupCounter">Match 1 of 12</div>
+        <div class="round-title" id="roundTitle">Round 1 — Group Stage</div>
+      </div>
+      <div class="timer-ring" id="timerRing">
+        <svg width="80" height="80" viewBox="0 0 80 80">
+          <circle class="timer-track" cx="40" cy="40" r="34" />
+          <circle class="timer-fill" id="timerCircle" cx="40" cy="40" r="34"
+            stroke-dasharray="213.6" stroke-dashoffset="0" />
+        </svg>
+        <div class="timer-text" id="timerText">30</div>
+      </div>
+    </div>
+
+    <!-- Live Admin Votes display -->
+    <div id="liveVotesDisplay" style="display:none; text-align:center; margin-bottom: 20px;">
+        <span class="info-tag">Live Votes: <b style="color:var(--pink-500)" id="votesLeftCount">0</b> Left | <b style="color:var(--pink-500)" id="votesRightCount">0</b> Right</span>
+    </div>
+
+    <div class="progress-label" id="progressLabel">Progress: 0 / 12 matches</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+    <div class="vote-instruction">
+      Click a card to vote
+    </div>
+
+    <div class="matchup" id="matchupArea">
+      <div class="candidate-card" id="cardLeft" onclick="vote('left')">
+        <div class="cand-photo" id="photoLeft"></div>
+        <div class="cand-initials" id="initialsLeft"></div>
+        <div class="cand-name" id="nameLeft"></div>
+        <div class="pickup-line" id="lineLeft"></div>
+        <!-- vote results overly -->
+        <div class="vote-result-overlay" id="voteOverlayLeft"></div>
+      </div>
+      <div>
+        <div class="vs-badge">VS</div>
+      </div>
+      <div class="candidate-card" id="cardRight" onclick="vote('right')">
+        <div class="cand-photo" id="photoRight"></div>
+        <div class="cand-initials" id="initialsRight"></div>
+        <div class="cand-name" id="nameRight"></div>
+        <div class="pickup-line" id="lineRight"></div>
+        <div class="vote-result-overlay" id="voteOverlayRight"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD SCREEN (Admin) -->
+  <div class="screen" id="screen-leaderboard">
+    <div class="section-title">👑 Live Leaderboard</div>
+    <div class="leaderboard-grid" id="leaderboardGrid"></div>
+    <div class="spacer"></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+      <span class="info-tag" id="lbStatus">Game in progress</span>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT OVERLAY (Round End) -->
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-content">
+    <span class="trophy" id="trophyEmoji">🏆</span>
+    <h2 class="result-title" id="resultTitle">Round Complete!</h2>
+    <p class="result-subtitle" id="resultSubtitle">Moving to next round...</p>
+    <div class="winners-grid" id="winnersGrid"></div>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn btn-gold" id="nextRoundBtn" onclick="nextRound()" style="display:none;">Next Round ✨</button>
+      <span id="playerWaitText" style="display:none; color:var(--text-med); font-weight:bold;">Waiting for Admin to start next round...</span>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

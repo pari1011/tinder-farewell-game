@@ -1,0 +1,302 @@
+const socket = io();
+
+// UI State
+let isAdmin = false;
+let roomCode = null;
+let playerName = '';
+let seniors = [];
+let amIVoted = false;
+
+// Helpers
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  
+  if(document.getElementById(`tab-${tab}`)) {
+    document.getElementById(`tab-${tab}`).classList.add('active');
+  }
+  document.getElementById(`screen-${tab}`).classList.add('active');
+}
+
+// 1. Connection & Room Logic
+function createRoom() {
+    socket.emit('create_room');
+}
+
+function joinRoom() {
+    playerName = document.getElementById('playerName').value.trim();
+    const code = document.getElementById('roomCode').value.trim().toUpperCase();
+    if(!playerName || !code) return showToast('Please enter name and code');
+    socket.emit('join_room', { code, name: playerName });
+}
+
+socket.on('room_created', (code) => {
+    isAdmin = true;
+    roomCode = code;
+    document.getElementById('adminTabs').style.display = 'flex';
+    document.getElementById('adminRoomInfo').style.display = 'inline-flex';
+    document.getElementById('displayRoomCode').textContent = code;
+    
+    // Init Setup grid
+    initDefaultSeniors();
+    buildSetupGrid();
+    switchTab('setup');
+});
+
+socket.on('joined_room', ({ code, state, round }) => {
+    roomCode = code;
+    if(state === 'setup') switchTab('waiting');
+    else if(state === 'game') switchTab('game'); // Ideally get match state
+});
+
+socket.on('players_updated', (players) => {
+    if(isAdmin) {
+        document.getElementById('playerCountLabel').textContent = `${players.length} Players Joined`;
+    }
+});
+
+socket.on('error_msg', msg => showToast(msg));
+
+// 2. Setup Logic (Admin)
+const DEFAULT_LINES = [
+  "If you were a star, you'd be the one everyone wishes upon ✨",
+  "Are you a library book? Because I keep checking you out 📚",
+  "Is your name Google? Because you have everything I've been searching for 🔍",
+  "Do you have a map? I keep getting lost in your eyes 🗺️",
+  "Are you a camera? Because every time I look at you, I smile 📸",
+  "If beauty were time, you'd be an eternity 💕",
+  "Are you a magician? Every time I look at you, everyone else disappears 🎩",
+  "Is it hot in here or is that just your presence? 🔥",
+  "Do you believe in love at first sight, or should I walk by again? 👀",
+  "Are you a parking ticket? Because you've got 'fine' written all over you 💌",
+  "If you were a vegetable, you'd be a cute-cumber 🥒",
+  "Are you made of copper and tellurium? Because you're CuTe ⚗️",
+  "Do you have a Band-Aid? Because I just scraped my knee falling for you 💝",
+  "Is your name Ariel? Because I think we mermaid for each other 🧜‍♀️",
+  "Are you a dictionary? Because you add meaning to my life 📖",
+  "If you were words on a page, you'd be fine print 😍",
+  "Do you have 11 protons? Because you're sodium fine 🧪",
+  "Are you a shooting star? Because my wish just came true ⭐",
+  "Is your name Chapstick? Because you're da balm 💋",
+  "Are you a sunflower? Because you make my whole day brighter 🌻",
+  "Do you like science? Because I've got great chemistry with you 🔬",
+  "Are you a time traveler? Because I see you in my future 🕰️",
+  "Is your name Honey? Because you're sweeter than candy 🍯"
+];
+
+const DEFAULT_NAMES = [
+  "Aisha Ali", "Bilal Baig", "Chhavi Chandra", "Diya Das",
+  "Esha Emre", "Fatima Farhan", "Geet Garg", "Hira Hussain",
+  "Isha Iyer", "Jiya Joshi", "Kavya Kapoor", "Layla Lari",
+  "Meera Mehta", "Noor Naqvi", "Orla Omar", "Priya Patel",
+  "Quela Qureshi", "Riya Rao", "Sara Sheikh", "Tanya Trivedi",
+  "Urmi Usman", "Vidya Verma", "Wania Waqar"
+];
+
+function getInitials(name) {
+  return name.split(' ').map(w => w[0]).join('.').toUpperCase();
+}
+
+function initDefaultSeniors() {
+  seniors = DEFAULT_NAMES.map((name, i) => ({
+    id: i, name, initials: getInitials(name), line: DEFAULT_LINES[i], photo: null, wins: 0, eliminated: false
+  }));
+}
+
+function buildSetupGrid() {
+  const grid = document.getElementById('seniorGrid');
+  grid.innerHTML = '';
+  seniors.forEach((s, i) => {
+    const card = document.createElement('div');
+    card.className = 'senior-card';
+    card.id = `setup-card-${i}`;
+    card.innerHTML = `
+      <div class="senior-avatar" onclick="document.getElementById('file-${i}').click()">
+        ${s.photo ? `<img src="${s.photo}" alt="">` : `<span>${s.initials}</span>`}
+      </div>
+      <input type="file" class="file-input" id="file-${i}" accept="image/*" onchange="handleUpload(${i}, this)">
+      <input class="senior-name-input" value="${s.name}" placeholder="Full Name" onchange="updateName(${i}, this.value)">
+      <div class="senior-initials-disp">${s.initials}</div>
+      <textarea class="senior-line-input" rows="2" placeholder="Pickup line..." onchange="updateLine(${i}, this.value)">${s.line}</textarea>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+window.handleUpload = function(i, input) {
+  if (!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    seniors[i].photo = e.target.result;
+    buildSetupGrid();
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+window.updateName = function(i, val) {
+  seniors[i].name = val;
+  seniors[i].initials = getInitials(val || '?');
+  buildSetupGrid();
+}
+window.updateLine = function(i, val) { seniors[i].line = val; }
+
+window.startGame = function() {
+    socket.emit('update_seniors', { code: roomCode, seniors });
+    socket.emit('start_game', { code: roomCode });
+}
+
+// 3. Game Flow
+socket.on('new_match', (payload) => {
+    document.getElementById('resultOverlay').classList.remove('visible');
+    switchTab('game');
+    amIVoted = false;
+    
+    document.getElementById('matchupCounter').textContent = payload.matchupCounter;
+    document.getElementById('roundTitle').textContent = payload.roundTitle;
+    document.getElementById('roundBadge').style.display = 'inline-block';
+    document.getElementById('roundBadge').textContent = payload.roundBadge;
+    document.getElementById('progressLabel').textContent = `Progress: ${payload.progress.done} / ${payload.progress.total} matches`;
+    document.getElementById('progressFill').style.width = `${(payload.progress.done / payload.progress.total) * 100}%`;
+    
+    setCandidate('Left', payload.left);
+    setCandidate('Right', payload.right);
+    
+    document.getElementById('cardLeft').className = 'candidate-card';
+    document.getElementById('cardRight').className = 'candidate-card';
+    
+    document.getElementById('voteOverlayLeft').style.display = 'none';
+    document.getElementById('voteOverlayRight').style.display = 'none';
+    
+    if(isAdmin) {
+        document.getElementById('liveVotesDisplay').style.display = 'block';
+        document.getElementById('votesLeftCount').textContent = '0';
+        document.getElementById('votesRightCount').textContent = '0';
+    }
+});
+
+function setCandidate(side, s) {
+  const photo = document.getElementById(`photo${side}`);
+  photo.innerHTML = s.photo ? `<img src="${s.photo}" alt="">` : s.initials;
+  document.getElementById(`initials${side}`).textContent = s.initials;
+  document.getElementById(`name${side}`).textContent = s.name;
+  document.getElementById(`line${side}`).textContent = s.line;
+}
+
+socket.on('timer_update', (t) => {
+  const offset = 213.6 * (1 - t / 30);
+  document.getElementById('timerCircle').style.strokeDashoffset = offset;
+  document.getElementById('timerText').textContent = t;
+  document.getElementById('timerRing').className = 'timer-ring' + (t <= 8 ? ' urgent' : '');
+});
+
+window.vote = function(side) {
+    if(amIVoted || isAdmin) return; // admins don't vote
+    amIVoted = true;
+    socket.emit('vote', { code: roomCode, side });
+    document.getElementById('card' + (side === 'left' ? 'Left' : 'Right')).classList.add('voted');
+}
+
+socket.on('live_votes', (v) => {
+    if(isAdmin) {
+        document.getElementById('votesLeftCount').textContent = v.left;
+        document.getElementById('votesRightCount').textContent = v.right;
+    }
+});
+
+socket.on('match_result', ({ winnerId, leftVotes, rightVotes, side }) => {
+    // Reveal votes
+    const ol = document.getElementById('voteOverlayLeft');
+    const or = document.getElementById('voteOverlayRight');
+    ol.style.display = 'flex'; or.style.display = 'flex';
+    ol.textContent = leftVotes; or.textContent = rightVotes;
+    
+    document.getElementById('card' + (side === 'left' ? 'Left' : 'Right')).classList.add('winner-glow');
+    document.getElementById('card' + (side === 'left' ? 'Right' : 'Left')).classList.add('loser-fade');
+});
+
+socket.on('leaderboard_update', (srvSeniors) => {
+    const grid = document.getElementById('leaderboardGrid');
+    const sorted = [...srvSeniors].sort((a, b) => {
+      if (a.eliminated !== b.eliminated) return a.eliminated ? 1 : -1;
+      return b.wins - a.wins;
+    });
+    
+    grid.innerHTML = sorted.map((s, rank) => {
+      const isActive = !s.eliminated;
+      let statusText = isActive ? '✅ In Game' : '❌ Eliminated';
+      let cardClass = `lb-card ${isActive ? 'in-game' : 'eliminated'}`;
+      return `<div class="${cardClass}">
+        <div class="lb-rank">#${rank + 1}</div>
+        <div class="lb-avatar">${s.photo ? `<img src="${s.photo}" alt="">` : s.initials}</div>
+        <div class="lb-name">${s.name}</div>
+        <div class="lb-wins">🏆 ${s.wins} wins</div>
+        <span class="lb-status">${statusText}</span>
+      </div>`;
+    }).join('');
+});
+
+socket.on('round_end', ({ round, winners, isFinal }) => {
+    const overlay = document.getElementById('resultOverlay');
+    
+    if(isFinal) {
+        document.getElementById('trophyEmoji').textContent = '👑';
+        document.getElementById('resultTitle').textContent = 'We Have a Queen!';
+        document.getElementById('resultSubtitle').textContent = 'The crowd goes absolutely wild! 🎉';
+        launchConfetti();
+    } else {
+        document.getElementById('trophyEmoji').textContent = '🌸';
+        document.getElementById('resultTitle').textContent = `Round ${round} Complete!`;
+        document.getElementById('resultSubtitle').textContent = `${winners.length} queens advance to Round ${round + 1}`;
+    }
+    
+    const wGrid = document.getElementById('winnersGrid');
+    wGrid.innerHTML = winners.slice(0, 8).map(s => {
+      return `<div class="winner-chip">
+        <div class="winner-chip-avatar">${s.photo ? `<img src="${s.photo}" alt="">` : s.initials}</div>
+        <div class="winner-chip-name">${s.initials}</div>
+      </div>`;
+    }).join('') + (winners.length > 8 ? `<div class="winner-chip"><div class="winner-chip-name">+${winners.length - 8} more</div></div>` : '');
+  
+    if(isAdmin && !isFinal) {
+        document.getElementById('nextRoundBtn').style.display = 'inline-block';
+        document.getElementById('playerWaitText').style.display = 'none';
+        switchTab('leaderboard');
+    } else if(!isFinal) {
+        document.getElementById('nextRoundBtn').style.display = 'none';
+        document.getElementById('playerWaitText').style.display = 'block';
+    }
+    
+    overlay.classList.add('visible');
+});
+
+window.nextRound = function() {
+    socket.emit('next_round', { code: roomCode });
+}
+
+function launchConfetti() {
+  const colors = ['#FFB3D1','#FF5C9A','#F7C948','#FFE4EE','#FF8BB8','#C4275F'];
+  const container = document.getElementById('confettiContainer');
+  container.innerHTML = '';
+  for (let i = 0; i < 80; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.cssText = `
+      left: ${Math.random() * 100}%;
+      top: -10px;
+      background: ${colors[Math.floor(Math.random() * colors.length)]};
+      width: ${6 + Math.random() * 8}px;
+      height: ${6 + Math.random() * 8}px;
+      border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+      animation-duration: ${2 + Math.random() * 3}s;
+      animation-delay: ${Math.random() * 1.5}s;
+    `;
+    container.appendChild(piece);
+  }
+}
