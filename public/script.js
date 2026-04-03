@@ -6,6 +6,17 @@ let roomCode = null;
 let playerName = '';
 let seniors = [];
 
+const urlParams = new URLSearchParams(window.location.search);
+const urlRoomCode = urlParams.get('room');
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (urlRoomCode) {
+        document.getElementById('joinSection').style.display = 'block';
+    } else {
+        document.getElementById('createSection').style.display = 'block';
+    }
+});
+
 // Helpers
 function showToast(msg) {
     const t = document.getElementById('toast');
@@ -31,9 +42,8 @@ function createRoom() {
 
 function joinRoom() {
     playerName = document.getElementById('playerName').value.trim();
-    const code = document.getElementById('roomCode').value.trim().toUpperCase();
-    if(!playerName || !code) return showToast('Please enter name and code');
-    socket.emit('join_room', { code, name: playerName });
+    if(!playerName || !urlRoomCode) return showToast('Please enter your name');
+    socket.emit('join_room', { code: urlRoomCode, name: playerName });
 }
 
 socket.on('room_created', (code) => {
@@ -41,7 +51,11 @@ socket.on('room_created', (code) => {
     roomCode = code;
     document.getElementById('adminTabs').style.display = 'flex';
     document.getElementById('adminRoomInfo').style.display = 'inline-flex';
-    document.getElementById('displayRoomCode').textContent = code;
+    
+    // Generate QR with join URL
+    const joinUrl = window.location.origin + window.location.pathname + '?room=' + code;
+    document.getElementById('qrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(joinUrl)}`;
+    document.getElementById('qrContainer').style.display = 'block';
     
     // Init Setup grid
     initDefaultSeniors();
