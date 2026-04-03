@@ -5,7 +5,6 @@ let isAdmin = false;
 let roomCode = null;
 let playerName = '';
 let seniors = [];
-let amIVoted = false;
 
 // Helpers
 function showToast(msg) {
@@ -156,7 +155,6 @@ window.startGame = function() {
 socket.on('new_match', (payload) => {
     document.getElementById('resultOverlay').classList.remove('visible');
     switchTab('game');
-    amIVoted = false;
     
     document.getElementById('matchupCounter').textContent = payload.matchupCounter;
     document.getElementById('roundTitle').textContent = payload.roundTitle;
@@ -197,9 +195,12 @@ socket.on('timer_update', (t) => {
 });
 
 window.vote = function(side) {
-    if(amIVoted || isAdmin) return; // admins don't vote
-    amIVoted = true;
+    if(isAdmin) return; // admins don't vote
+    
     socket.emit('vote', { code: roomCode, side });
+    
+    document.getElementById('cardLeft').classList.remove('voted');
+    document.getElementById('cardRight').classList.remove('voted');
     document.getElementById('card' + (side === 'left' ? 'Left' : 'Right')).classList.add('voted');
 }
 

@@ -180,20 +180,17 @@ io.on('connection', (socket) => {
   
   socket.on('vote', ({ code, side }) => { 
     const room = rooms[code];
-    if (room && room.state === 'game' && !room.votes[socket.id]) {
+    if (room && room.state === 'game') {
+      
+      // Update or add their vote
       room.votes[socket.id] = side;
-      room.votedCount++;
+      // We no longer track a strict votedCount for early finishes to enforce 30 seconds
       
       io.to(room.admin).emit('live_votes', {
          left: Object.values(room.votes).filter(v => v === 'left').length,
          right: Object.values(room.votes).filter(v => v === 'right').length,
          total: room.players.length
       });
-      
-      if (room.votedCount >= room.players.length && room.players.length > 0) {
-        clearInterval(room.timerInterval);
-        resolveMatch(code);
-      }
     }
   });
   
@@ -248,12 +245,6 @@ io.on('connection', (socket) => {
       room.players = room.players.filter(p => p.id !== socket.id);
       if (room.players.length !== initialLength) {
         io.to(room.admin).emit('players_updated', room.players);
-        
-        // If we're mid-game, and this was the last person holding up the timer
-        if(room.state === 'game' && room.votedCount >= room.players.length && room.players.length > 0) {
-            clearInterval(room.timerInterval);
-            resolveMatch(code);
-        }
       }
     }
   });
