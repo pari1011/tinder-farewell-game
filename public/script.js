@@ -231,16 +231,30 @@ socket.on('leaderboard_update', (srvSeniors) => {
     });
     
     grid.innerHTML = sorted.map((s, rank) => {
-      const isActive = !s.eliminated;
-      let statusText = isActive ? '✅ In Game' : '❌ Eliminated';
-      let cardClass = `lb-card ${isActive ? 'in-game' : 'eliminated'}`;
-      return `<div class="${cardClass}">
-        <div class="lb-rank">#${rank + 1}</div>
-        <div class="lb-avatar">${s.photo ? `<img src="${s.photo}" alt="">` : s.initials}</div>
-        <div class="lb-name">${s.name}</div>
-        <div class="lb-wins">🏆 ${s.wins} wins</div>
-        <span class="lb-status">${statusText}</span>
-      </div>`;
+        let classes = 'lb-row ';
+        if (s.eliminated) classes += 'eliminated ';
+        else classes += 'in-game ';
+        if (rank === 0 && !s.eliminated) classes += 'champion ';
+        
+        let rankStr = `<div class="lb-rank">#${rank+1}</div>`;
+        if(rank === 0) rankStr = `<div class="lb-rank gold">🥇</div>`;
+        else if(rank === 1) rankStr = `<div class="lb-rank silver">🥈</div>`;
+        else if(rank === 2) rankStr = `<div class="lb-rank bronze">🥉</div>`;
+        
+        return `
+        <div class="${classes}">
+            ${rankStr}
+            <div class="lb-avatar">${s.photo ? `<img src="${s.photo}">` : s.initials}</div>
+            <div class="lb-details">
+                <div class="lb-name">${s.initials}</div>
+                <div class="lb-hobbies">${s.hobbies || ''}</div>
+            </div>
+            <div class="lb-score-box">
+                <div class="lb-score-val">${s.wins}</div>
+                <div class="lb-score-label">WINS</div>
+            </div>
+            <div class="lb-status-badge ${s.eliminated ? 'eliminated' : 'in-game'}">${s.eliminated ? 'OUT' : 'ACTIVE'}</div>
+        </div>`;
     }).join('');
 });
 
