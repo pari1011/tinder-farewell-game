@@ -78,48 +78,35 @@ socket.on('players_updated', (players) => {
 socket.on('error_msg', msg => showToast(msg));
 
 // 2. Setup Logic (Admin)
-const DEFAULT_LINES = [
-  "If you were a star, you'd be the one everyone wishes upon ✨",
-  "Are you a library book? Because I keep checking you out 📚",
-  "Is your name Google? Because you have everything I've been searching for 🔍",
-  "Do you have a map? I keep getting lost in your eyes 🗺️",
-  "Are you a camera? Because every time I look at you, I smile 📸",
-  "If beauty were time, you'd be an eternity 💕",
-  "Are you a magician? Every time I look at you, everyone else disappears 🎩",
-  "Is it hot in here or is that just your presence? 🔥",
-  "Do you believe in love at first sight, or should I walk by again? 👀",
-  "Are you a parking ticket? Because you've got 'fine' written all over you 💌",
-  "If you were a vegetable, you'd be a cute-cumber 🥒",
-  "Are you made of copper and tellurium? Because you're CuTe ⚗️",
-  "Do you have a Band-Aid? Because I just scraped my knee falling for you 💝",
-  "Is your name Ariel? Because I think we mermaid for each other 🧜‍♀️",
-  "Are you a dictionary? Because you add meaning to my life 📖",
-  "If you were words on a page, you'd be fine print 😍",
-  "Do you have 11 protons? Because you're sodium fine 🧪",
-  "Are you a shooting star? Because my wish just came true ⭐",
-  "Is your name Chapstick? Because you're da balm 💋",
-  "Are you a sunflower? Because you make my whole day brighter 🌻",
-  "Do you like science? Because I've got great chemistry with you 🔬",
-  "Are you a time traveler? Because I see you in my future 🕰️",
-  "Is your name Honey? Because you're sweeter than candy 🍯"
+const RAW_SENIORS = [
+  {"name":"S.L","hobbies":"Dancing, Singing, Debating, Acting","line":"Will steal your fries AND your heart 🍟💘","img":"images/img1.jpg"},
+  {"name":"S.B","hobbies":"Acting","line":"Debugging your heart since 2004 ","img":"images/img2.jpg"},
+  {"name":"T.J.","hobbies":"Debating","line":"I’ll win the debate but still choose you 💘","img":"images/img3.jpg"},
+  {"name":"A.D.","hobbies":"Dancing, Singing, Debating, Acting","line":"I act well, but this smile for you is real","img":"images/img4.jpg"},
+  {"name":"T.R.","hobbies":"Debating","line":"Are you WiFi? Because I’m feeling a strong connection","img":"images/img5.jpg"},
+  {"name":"M.D.","hobbies":"Dancing, Singing, Debating, Acting","line":"I had a line ready… but you distracted me","img":"images/img6.jpg"},
+  {"name":"H.Y.","hobbies":"Debating","line":"I’d put you on repeat… no shame","img":"images/img7.jpg"},
+  {"name":"G.T.","hobbies":"Dancing","line":"Is your name Google? Because you have everything I’m searching for.","img":"images/img8.jpg"},
+  {"name":"A.A","hobbies":"Acting","line":"Are you made of Copper and Tellurium? Because you’re CuTe.","img":"images/img9.jpg"},
+  {"name":"R.V.","hobbies":"Singing","line":"If I could rearrange the alphabet, I’d put 'U' and 'I' together.","img":"images/img10.jpg"},
+  {"name":"S.H.","hobbies":"Dancing, Singing, Debating, Acting","line":"Well, here I am. What are your other two wishes?","img":"images/img11.jpg"},
+  {"name":"R.B.","hobbies":"Dancing","line":"Do you have a Band-Aid? Because I scraped my knee falling for you.","img":"images/img12.jpg"},
+  {"name":"A.B","hobbies":"Dancing, Singing, Acting","line":"Do you believe in love at first sight, or should I walk by again?","img":"images/img13.jpg"},
+  {"name":"R.R.","hobbies":"Acting","line":"Is there an airport nearby or is it my heart taking off?","img":"images/img14.jpg"},
+  {"name":"J.H.","hobbies":"Acting","line":"If you were a tropical fruit, you’d be a fine-apple.","img":"images/img15.jpg"},
+  {"name":"B.S.","hobbies":"Dancing, Singing, Debating, Acting","line":"I think there’s something wrong with my eyes, I can’t take them off you.","img":"images/img16.jpg"},
+  {"name":"A.B.","hobbies":"Dancing, Singing, Debating, Acting","line":"If I were a stop light, I’d turn red every time you passed by, just so I could stare at you a bit longer.","img":"images/img17.jpg"},
+  {"name":"D.C.","hobbies":"Acting","line":"On a scale of 1 to 10, you’re a 9... and I’m the 1 you need. ❤️","img":"images/img18.jpg"},
+  {"name":"A.C.","hobbies":"Dancing, Singing, Debating, Acting","line":"Are you a tower? Because Eiffel for you.","img":"images/img19.jpg"},
+  {"name":"H.V.","hobbies":"Dancing, Singing, Debating, Acting","line":"Are you the sun? Because my world revolves around you.","img":"images/img20.jpg"},
+  {"name":"P.P.","hobbies":"Dancing, Singing, Debating, Acting","line":"If you were a vegetable, you would be a cute-cumber ","img":"images/img21.jpg"},
+  {"name":"V.K.","hobbies":"Debating","line":"I was feeling a bit off today, but you definitely turned me on.","img":"images/img22.jpg"},
+  {"name":"A.R.","hobbies":"Dancing, Debating","line":"Did it hurt? When you fell from heaven?","img":"images/img23.jpg"}
 ];
-
-const DEFAULT_NAMES = [
-  "Aisha Ali", "Bilal Baig", "Chhavi Chandra", "Diya Das",
-  "Esha Emre", "Fatima Farhan", "Geet Garg", "Hira Hussain",
-  "Isha Iyer", "Jiya Joshi", "Kavya Kapoor", "Layla Lari",
-  "Meera Mehta", "Noor Naqvi", "Orla Omar", "Priya Patel",
-  "Quela Qureshi", "Riya Rao", "Sara Sheikh", "Tanya Trivedi",
-  "Urmi Usman", "Vidya Verma", "Wania Waqar"
-];
-
-function getInitials(name) {
-  return name.split(' ').map(w => w[0]).join('.').toUpperCase();
-}
 
 function initDefaultSeniors() {
-  seniors = DEFAULT_NAMES.map((name, i) => ({
-    id: i, name, initials: getInitials(name), line: DEFAULT_LINES[i], photo: null, wins: 0, eliminated: false
+  seniors = RAW_SENIORS.map((s, i) => ({
+    id: i, name: s.name, initials: s.name, hobbies: s.hobbies, line: s.line, photo: s.img, wins: 0, eliminated: false
   }));
 }
 
@@ -197,7 +184,7 @@ function setCandidate(side, s) {
   const photo = document.getElementById(`photo${side}`);
   photo.innerHTML = s.photo ? `<img src="${s.photo}" alt="">` : s.initials;
   document.getElementById(`initials${side}`).textContent = s.initials;
-  document.getElementById(`name${side}`).textContent = s.name;
+  document.getElementById(`hobbies${side}`).textContent = s.hobbies;
   document.getElementById(`line${side}`).textContent = s.line;
 }
 
