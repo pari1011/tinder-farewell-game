@@ -159,9 +159,10 @@ body {
   display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 60px; color: var(--pink-600); border: 2px solid var(--pink-100); box-shadow: 0 4px 12px rgba(200,40,100,0.1);
 }
 .cand-photo img { width: 100%; height: 100%; object-fit: cover; }
-.cand-initials { font-family: 'Playfair Display', serif; font-size: 26px; color: var(--pink-600); font-weight: 700; margin-bottom: 4px; }
-.cand-name { font-size: 14px; color: var(--text-med); font-weight: 600; margin-bottom: 12px; }
-.pickup-line { font-size: 14px; color: var(--text-med); font-style: italic; line-height: 1.5; padding: 10px 12px; background: var(--pink-50); border-radius: 10px; border-left: 4px solid var(--pink-200); width: 100%; }
+.cand-initials { font-family: 'Nunito', sans-serif; font-size: 16px; color: var(--text-med); font-weight: 800; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 1px; }
+.cand-hobbies { font-size: 12px; color: var(--text-light); font-weight: 600; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+.cand-name { font-size: 14px; color: var(--text-med); font-weight: 600; margin-bottom: 12px; display: none; }
+.pickup-line { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--pink-600); font-style: italic; font-weight: 700; line-height: 1.3; padding: 16px; background: linear-gradient(135deg, var(--pink-50), white); border-radius: 16px; border: 2px solid var(--pink-100); box-shadow: 0 4px 12px rgba(232,58,122,0.08); width: 100%; }
 .vs-badge { background: linear-gradient(135deg, var(--pink-400), var(--pink-600)); color: white; font-weight: 900; font-size: 18px; width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(200,40,100,0.35); font-family: 'Playfair Display', serif; }
 .vote-instruction { text-align: center; font-size: 13px; color: var(--text-light); margin-bottom: 16px; font-weight: 600; }
 
