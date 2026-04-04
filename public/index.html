@@ -82,13 +82,14 @@
           <circle class="timer-fill" id="timerCircle" cx="40" cy="40" r="34"
             stroke-dasharray="213.6" stroke-dashoffset="0" />
         </svg>
-        <div class="timer-text" id="timerText">30</div>
+        <div class="timer-text" id="timerText">15</div>
       </div>
     </div>
 
     <!-- Live Admin Votes display -->
     <div id="liveVotesDisplay" style="display:none; text-align:center; margin-bottom: 20px;">
         <span class="info-tag">Live Votes: <b style="color:var(--pink-500)" id="votesLeftCount">0</b> Left | <b style="color:var(--pink-500)" id="votesRightCount">0</b> Right</span>
+        <button class="btn btn-outline" style="margin-top: 10px;" onclick="zeroTimer()">End Timer</button>
     </div>
 
     <div class="progress-label" id="progressLabel">Progress: 0 / 12 matches</div>

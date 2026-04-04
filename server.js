@@ -46,7 +46,7 @@ io.on('connection', (socket) => {
       winners: [],
       votes: {},
       votedCount: 0,
-      timeLeft: 30,
+      timeLeft: 15,
       timerInterval: null
       // Removed the custom data since admin uploads it
     };
@@ -123,7 +123,7 @@ io.on('connection', (socket) => {
     const leftSenior = room.seniors.find(s => s.id === m[0]);
     const rightSenior = room.seniors.find(s => s.id === m[1]);
     
-    room.timeLeft = 30;
+    room.timeLeft = 15;
     
     const payload = {
       matchupCounter: `Match ${room.currentMatch + 1} of ${room.matchups.filter(x => x[1] !== null).length}`,
@@ -191,6 +191,18 @@ io.on('connection', (socket) => {
          right: Object.values(room.votes).filter(v => v === 'right').length,
          total: room.players.length
       });
+    }
+  });
+  
+  socket.on('zero_timer', ({ code }) => {
+    const room = rooms[code];
+    if (room && room.admin === socket.id && room.state === 'game') {
+      if (room.timeLeft > 0) {
+        room.timeLeft = 0;
+        io.to(code).emit('timer_update', 0);
+        clearInterval(room.timerInterval);
+        resolveMatch(code);
+      }
     }
   });
   

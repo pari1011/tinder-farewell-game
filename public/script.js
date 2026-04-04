@@ -191,11 +191,17 @@ function setCandidate(side, s) {
 }
 
 socket.on('timer_update', (t) => {
-  const offset = 213.6 * (1 - t / 30);
+  const offset = 213.6 * (1 - t / 15);
   document.getElementById('timerCircle').style.strokeDashoffset = offset;
   document.getElementById('timerText').textContent = t;
-  document.getElementById('timerRing').className = 'timer-ring' + (t <= 8 ? ' urgent' : '');
+  document.getElementById('timerRing').className = 'timer-ring' + (t <= 5 ? ' urgent' : '');
 });
+
+window.zeroTimer = function() {
+    if(isAdmin) {
+        socket.emit('zero_timer', { code: roomCode });
+    }
+}
 
 window.vote = function(side) {
     if(isAdmin) return; // admins don't vote
