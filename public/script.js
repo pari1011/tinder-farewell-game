@@ -101,7 +101,9 @@ const RAW_SENIORS = [
   {"name":"H.V.","hobbies":"Dancing, Singing, Debating, Acting","line":"Are you the sun? Because my world revolves around you.","img":"images/hv.jpeg"},
   {"name":"P.P.","hobbies":"Dancing, Singing, Debating, Acting","line":"If you were a vegetable, you would be a cute-cumber ","img":"images/pp.jpeg"},
   {"name":"V.K.","hobbies":"Debating","line":"I was feeling a bit off today, but you definitely turned me on.","img":"images/vk.jpeg"},
-  {"name":"A.R.","hobbies":"Dancing, Debating","line":"Did it hurt? When you fell from heaven?","img":"images/ar.jpeg"}
+  {"name":"A.R.","hobbies":"Dancing, Debating","line":"Did it hurt? When you fell from heaven?","img":"images/ar.jpeg"},
+  {"name":"V.K.","hobbies":"Dancing, Singing, Debating, Acting","line":"Do you have a map? I keep getting lost in your eyes.","img":"images/vk2.jpeg"},
+  {"name":"A.V.","hobbies":"Dancing, Singing, Debating, Acting","line":"Are you a camera? Because every time I look at you, I smile.","img":"images/av.jpeg"}
 ];
 
 function initDefaultSeniors() {
